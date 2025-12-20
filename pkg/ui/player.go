@@ -6,8 +6,8 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-// MainWindow represents the main application window
-type MainWindow struct {
+// PlayerWindow represents the main application window
+type PlayerWindow struct {
 	Window      fyne.Window
 	Application fyne.App
 	Icon        *fyne.StaticResource
@@ -30,7 +30,7 @@ type Config struct {
 	DefaultVolume float64
 }
 
-// DefaultConfig returns default window configuration
+// DefaultConfig returns the default window configuration
 func DefaultConfig() Config {
 	return Config{
 		Width:         420,
@@ -39,10 +39,10 @@ func DefaultConfig() Config {
 	}
 }
 
-// NewMainWindow creates and initializes the main application window
-func NewMainWindow(app fyne.App, icon *fyne.StaticResource, config Config) *MainWindow {
-	w := &MainWindow{
-		Window:      app.NewWindow("Reminder"),
+// NewPlayerWindow creates and initializes the main application window
+func NewPlayerWindow(app fyne.App, icon *fyne.StaticResource, config Config) *PlayerWindow {
+	w := &PlayerWindow{
+		Window:      app.NewWindow("Player"),
 		Application: app,
 		Icon:        icon,
 		VolLabel:    widget.NewLabel("Volume"),
@@ -59,35 +59,35 @@ func NewMainWindow(app fyne.App, icon *fyne.StaticResource, config Config) *Main
 	return w
 }
 
-func (w *MainWindow) configureComponents(config Config) {
-	w.VolSlider.SetValue(config.DefaultVolume)
-	w.VolSlider.Step = 1
+func (pw *PlayerWindow) configureComponents(config Config) {
+	pw.VolSlider.SetValue(config.DefaultVolume)
+	pw.VolSlider.Step = 1
 
-	w.Progress.Min = 0
-	w.Progress.Max = 1
-	w.Progress.SetValue(0)
+	pw.Progress.Min = 0
+	pw.Progress.Max = 1
+	pw.Progress.SetValue(0)
 }
 
-func (w *MainWindow) setupLayout() {
+func (pw *PlayerWindow) setupLayout() {
 	startBtn := widget.NewButton("Start", func() {
-		if w.StartBtnFn != nil {
-			w.StartBtnFn()
+		if pw.StartBtnFn != nil {
+			pw.StartBtnFn()
 		}
 	})
 	stopBtn := widget.NewButton("Stop", func() {
-		if w.StopBtnFn != nil {
-			w.StopBtnFn()
+		if pw.StopBtnFn != nil {
+			pw.StopBtnFn()
 		}
 	})
 
 	content := container.NewVBox(
 		widget.NewLabel("Reminder Alarm"),
 		container.NewGridWithColumns(2, startBtn, stopBtn),
-		w.VolLabel,
-		w.VolSlider,
-		w.Progress,
-		w.TimeLabel,
+		pw.VolLabel,
+		pw.VolSlider,
+		pw.Progress,
+		pw.TimeLabel,
 	)
 
-	w.Window.SetContent(content)
+	pw.Window.SetContent(content)
 }

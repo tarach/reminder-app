@@ -8,13 +8,13 @@ import (
 // SystemTray manages the system tray icon and menu
 type SystemTray struct {
 	QuitMenuItemFn func()
-	mainWindow     *MainWindow
+	mainWindow     *PlayerWindow
 	desk           desktop.App
 	icon           *fyne.StaticResource
 }
 
 // NewSystemTray creates and initializes the system tray
-func NewSystemTray(desk desktop.App, mainWindow *MainWindow, icon *fyne.StaticResource) *SystemTray {
+func NewSystemTray(desk desktop.App, mainWindow *PlayerWindow, icon *fyne.StaticResource) *SystemTray {
 	t := &SystemTray{
 		mainWindow: mainWindow,
 		desk:       desk,
