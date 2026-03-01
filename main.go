@@ -17,6 +17,7 @@ var DefaultAlarm []byte
 
 func main() {
 	a := app.New()
+	a.Settings().SetTheme(&ui.AppTheme{})
 	icon := fyne.NewStaticResource("icon", IconPNG)
 
 	reminderListWindow := ui.NewReminderListWindow(a, icon)

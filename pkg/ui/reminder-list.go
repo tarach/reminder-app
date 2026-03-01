@@ -6,8 +6,17 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+)
+
+// Design palette - used for custom canvas elements
+var (
+	cardBgColor     = color.NRGBA{R: 0xFF, G: 0xFF, B: 0xFF, A: 0xFF}
+	cardBorderColor = color.NRGBA{R: 0xE2, G: 0xE8, B: 0xF0, A: 0xFF}
+	cardShadowColor = color.NRGBA{R: 0x0, G: 0x0, B: 0x0, A: 0x18}
+	dayInactiveBg   = color.NRGBA{R: 0xF1, G: 0xF5, B: 0xF9, A: 0xFF}
 )
 
 type ReminderType string
@@ -78,36 +87,42 @@ func (w *ReminderListWindow) setupLayout() {
 		reminderList.Add(reminderCard)
 	}
 
-	// Add a button to create new reminders
-	addButton := widget.NewButton("+ Add Reminder", func() {
+	// Add a prominent button to create new reminders
+	addButton := widget.NewButton("  +  Add Reminder  ", func() {
 		// TODO: Open dialog to create new reminder
 	})
+	addButton.Importance = widget.HighImportance
+
+	scrollContent := container.NewVBox(reminderList)
+	scroll := container.NewVScroll(scrollContent)
+	scroll.SetMinSize(fyne.NewSize(0, 0))
 
 	content := container.NewBorder(
 		nil,
-		addButton,
+		container.NewPadded(addButton),
 		nil,
 		nil,
-		container.NewVScroll(reminderList),
+		scroll,
 	)
 
 	w.Window.SetContent(content)
-	w.Window.Resize(fyne.NewSize(500, 400))
+	w.Window.Resize(fyne.NewSize(500, 480))
 }
 
 func (w *ReminderListWindow) createReminderCard(reminder *Reminder) fyne.CanvasObject {
-	// Name label
+	// Name label - prominent, readable
 	nameLabel := widget.NewLabelWithStyle(reminder.Name, fyne.TextAlignLeading, fyne.TextStyle{Bold: true})
+	nameLabel.Wrapping = fyne.TextWrapOff
 
-	// Time/Counter display in the center using canvas.Text for custom size
+	// Time/Counter display - large, clear typography
 	timeText := canvas.NewText(reminder.TimeValue, theme.Color(theme.ColorNameForeground))
-	timeText.TextSize = 32
+	timeText.TextSize = 28
 	timeText.TextStyle = fyne.TextStyle{Bold: true}
 	timeText.Alignment = fyne.TextAlignCenter
 
-	// Type indicator using canvas.Text for custom size
+	// Type indicator - subtle
 	typeText := canvas.NewText(string(reminder.Type), theme.Color(theme.ColorNameDisabled))
-	typeText.TextSize = 10
+	typeText.TextSize = 11
 	typeText.Alignment = fyne.TextAlignCenter
 
 	// Center section with time and type
@@ -126,14 +141,13 @@ func (w *ReminderListWindow) createReminderCard(reminder *Reminder) fyne.CanvasO
 		dayButtons.Add(dayBtn)
 	}
 
-	// On/Off switch
-	toggle := widget.NewCheck("", func(checked bool) {
+	// On/Off toggle switch - wrap in Center so it keeps its compact size (Border stretches right object to full height)
+	toggle := NewToggleSwitch(reminder.IsEnabled, func(checked bool) {
 		reminder.IsEnabled = checked
 	})
-	toggle.Checked = reminder.IsEnabled
+	toggleContainer := container.NewCenter(toggle)
 
-	// Layout: Name on top, center section, days, and toggle
-	// Wrap both nameLabel and dayButtons in containers without extra nesting
+	// Layout: Name on top, days below
 	leftSection := container.NewBorder(
 		nameLabel,
 		nil,
@@ -146,59 +160,65 @@ func (w *ReminderListWindow) createReminderCard(reminder *Reminder) fyne.CanvasO
 		nil,
 		nil,
 		leftSection,
-		toggle,
+		toggleContainer,
 		container.NewCenter(centerSection),
 	)
 
-	// Create a rectangle background
-	rect := canvas.NewRectangle(color.RGBA{R: 240, G: 240, B: 245, A: 255})
-	rect.StrokeColor = color.RGBA{R: 200, G: 200, B: 210, A: 255}
+	// Card background - clean white with subtle border and rounded corners
+	rect := canvas.NewRectangle(cardBgColor)
+	rect.StrokeColor = cardBorderColor
 	rect.StrokeWidth = 1
+	rect.CornerRadius = 8
 
-	// Use padding container with minimum size for the card
+	// Card with padding
 	cardWithBg := container.NewStack(
 		rect,
-		container.NewPadded(cardContent),
+		container.NewPadded(container.NewPadded(cardContent)),
 	)
 
-	// Wrap in a container with minimum size
-	sizedCard := container.NewPadded(cardWithBg)
+	// Shadow layer - extends 6px beyond card for outer shadow effect
+	shadowRect := canvas.NewRectangle(cardShadowColor)
+	shadowRect.CornerRadius = 14 // 8 (card radius) + 6 (shadow padding)
+	shadowPadding := float32(6)
+	paddedCard := container.New(layout.NewCustomPaddedLayout(0, shadowPadding, 0, shadowPadding), cardWithBg)
+	cardWithShadow := container.NewStack(shadowRect, paddedCard)
 
-	return sizedCard
+	// Wrap with margin and padding for spacing between cards
+	return container.NewPadded(container.NewPadded(cardWithShadow))
 }
 
 func (w *ReminderListWindow) createDayButton(day string, isActive bool) fyne.CanvasObject {
-	var bgColor = getDayBackgroundColor(isActive)
+	bgColor := getDayBackgroundColor(isActive)
 	circle := canvas.NewCircle(bgColor)
 
-	var textColor color.Color
-	textColor = color.RGBA{R: 100, G: 100, B: 100, A: 255}
+	textColor := theme.Color(theme.ColorNameForeground)
+	if isActive {
+		textColor = theme.Color(theme.ColorNameForegroundOnPrimary)
+	}
 
 	dayText := canvas.NewText(day, textColor)
-	dayText.TextSize = 10
+	dayText.TextSize = 11
 	dayText.Alignment = fyne.TextAlignCenter
 	dayText.TextStyle = fyne.TextStyle{Bold: true}
 
 	// Calculate text size and add padding for the circle
 	textSize := dayText.MinSize()
-	padding := float32(4) // Adjust this value to control how much bigger the circle is
+	padding := float32(6)
 	circleSize := fyne.NewSize(
 		textSize.Width+padding*2,
 		textSize.Height+padding*2,
 	)
 
-	// Make it a perfect circle by using the larger dimension
-	if circleSize.Width > circleSize.Height {
-		circleSize.Height = circleSize.Width
-	} else {
-		circleSize.Width = circleSize.Height
+	// Make it a perfect circle
+	maxDim := circleSize.Width
+	if circleSize.Height > maxDim {
+		maxDim = circleSize.Height
 	}
+	circleSize = fyne.NewSize(maxDim, maxDim)
 
-	// Create a spacer to define the minimum size based on text + padding
 	spacer := canvas.NewRectangle(color.Transparent)
 	spacer.SetMinSize(circleSize)
 
-	// Stack: spacer (invisible, defines size), circle (fills the space), text (centered)
 	return container.NewStack(
 		spacer,
 		circle,
@@ -210,7 +230,7 @@ func getDayBackgroundColor(isActive bool) color.Color {
 	if isActive {
 		return theme.Color(theme.ColorNamePrimary)
 	}
-	return theme.Color(theme.ColorNameDisabled)
+	return dayInactiveBg
 }
 
 func (w *ReminderListWindow) Show() {

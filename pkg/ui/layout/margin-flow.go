@@ -113,13 +113,14 @@ func (d *MarginFlowLayout) Layout(objects []fyne.CanvasObject, containerSize fyn
 		}
 
 		fmt.Println("")
+		output := "(not a text object)"
 		if textObj, ok := o.(*canvas.Text); ok {
-			fmt.Println("Text: ", textObj.Text)
-		} else if textWithMargin, ok := o.(*TextWithMargin); ok {
-			fmt.Println("Text: ", textWithMargin.Text.Text)
-		} else {
-			fmt.Println("Text: (not a text object)")
+			output = textObj.Text
 		}
+		if textWithMargin, ok := o.(*TextWithMargin); ok {
+			output = textWithMargin.Text.Text
+		}
+		fmt.Println("Text: ", output)
 		fmt.Println("Pos x: ", pos.X, " Pos y: ", pos.Y)
 		fmt.Println("Margin left: ", marginLeft, " Margin top: ", marginTop)
 
