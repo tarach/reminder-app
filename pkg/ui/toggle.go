@@ -15,28 +15,32 @@ var (
 	toggleKnobBg = color.White
 )
 
-// ToggleSwitch is a custom toggle switch widget (off = left, on = right).
+// ToggleSwitch is a custom vertical toggle switch widget (off = bottom, on = top).
 type ToggleSwitch struct {
 	widget.BaseWidget
 	Checked   bool
 	OnChanged func(checked bool)
 
 	track *canvas.Rectangle
-	knob  *canvas.Circle
+	knob  *canvas.Rectangle // Now a rounded rectangle knob
 }
 
-// NewToggleSwitch creates a new toggle switch.
+// NewToggleSwitch creates a new vertical toggle switch.
 func NewToggleSwitch(checked bool, onChanged func(checked bool)) *ToggleSwitch {
 	track := canvas.NewRectangle(toggleOffBg)
 	if checked {
 		track.FillColor = toggleOnBg
 	}
-	track.CornerRadius = 5 // semicircular ends (half of height)
+	track.CornerRadius = 10 // rounded ends for vertical track
+
+	knob := canvas.NewRectangle(toggleKnobBg)
+	knob.CornerRadius = 6 // rounded corners for square-ish knob
+
 	t := &ToggleSwitch{
 		Checked:   checked,
 		OnChanged: onChanged,
 		track:     track,
-		knob:      canvas.NewCircle(toggleKnobBg),
+		knob:      knob,
 	}
 	t.ExtendBaseWidget(t)
 	return t
@@ -71,34 +75,41 @@ func (t *ToggleSwitch) CreateRenderer() fyne.WidgetRenderer {
 type toggleRenderer struct {
 	toggle *ToggleSwitch
 	track  *canvas.Rectangle
-	knob   *canvas.Circle
+	knob   *canvas.Rectangle // Now a rounded rectangle
 }
 
 func (r *toggleRenderer) Layout(size fyne.Size) {
 	r.track.Resize(size)
 	r.track.Move(fyne.NewPos(0, 0))
 
-	// Knob: ~50% of track height, centered
-	knobSize := size.Height / 2
-	if knobSize < 4 {
-		knobSize = 4
+	// Knob: square with rounded corners, fits inside vertical track
+	padding := float32(4)
+	availW := size.Width - padding*2
+	availH := size.Height - padding*2
+	side := availW
+	if availH < side {
+		side = availH
 	}
-	r.knob.Resize(fyne.NewSize(knobSize, knobSize))
+	if side < 12 {
+		side = 12
+	}
 
-	// Position knob: left when off, right when on
-	knobY := (size.Height - knobSize) / 2
-	var knobX float32
+	r.knob.Resize(fyne.NewSize(side, side))
+
+	// Position knob: top (on) or bottom (off) — vertical layout
+	var knobY float32
 	if r.toggle.Checked {
-		knobX = size.Width - knobSize - 2
+		knobY = padding // on = knob at top
 	} else {
-		knobX = 2
+		knobY = size.Height - side - padding // off = knob at bottom
 	}
+	knobX := padding + (availW-side)/2 // center horizontally
 	r.knob.Move(fyne.NewPos(knobX, knobY))
 }
 
 func (r *toggleRenderer) MinSize() fyne.Size {
-	// Compact toggle: wider track, slimmer height
-	return fyne.NewSize(60, 20)
+	// Vertical toggle: track is taller than wide (portrait)
+	return fyne.NewSize(28, 56)
 }
 
 func (r *toggleRenderer) Refresh() {
@@ -108,6 +119,7 @@ func (r *toggleRenderer) Refresh() {
 		r.track.FillColor = toggleOffBg
 	}
 	r.track.Refresh()
+	r.knob.Refresh()
 	r.Layout(r.toggle.Size())
 }
 
