@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"reminder-app/pkg/config"
 	"reminder-app/pkg/ui"
 
 	"fyne.io/fyne/v2"
@@ -15,12 +16,19 @@ var IconPNG []byte
 //go:embed assets/default-alarm.mp3
 var DefaultAlarm []byte
 
+//go:embed config/sample.json
+var SampleConfig []byte
+
 func main() {
 	a := app.New()
 	a.Settings().SetTheme(&ui.AppTheme{})
 	icon := fyne.NewStaticResource("icon", IconPNG)
 
 	reminderListWindow := ui.NewReminderListWindow(a, icon)
+	reminderListWindow.Window.Show()
+	ui.StartConfigFlow(reminderListWindow.Window, SampleConfig, func(cfg *config.Config, _ bool) {
+		reminderListWindow.SetFromConfig(cfg)
+	}, a.Quit)
 	reminderListWindow.Window.ShowAndRun()
 	/*
 		windowConfig := ui.DefaultConfig()

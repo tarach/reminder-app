@@ -2,6 +2,7 @@ package ui
 
 import (
 	"image/color"
+	"reminder-app/pkg/config"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -48,34 +49,59 @@ func NewReminderListWindow(app fyne.App, icon *fyne.StaticResource) *ReminderLis
 		Icon:        icon,
 		Reminders:   []*Reminder{},
 	}
-
-	// Add some sample reminders
-	w.Reminders = append(w.Reminders,
-		&Reminder{
-			Name:       "Morning Workout",
-			Type:       ReminderTypeClock,
-			TimeValue:  "07:00",
-			ActiveDays: map[string]bool{"M": true, "W": true, "F": true},
-			IsEnabled:  true,
-		},
-		&Reminder{
-			Name:       "Study Session",
-			Type:       ReminderTypeCounter,
-			TimeValue:  "25:00",
-			ActiveDays: map[string]bool{"M": true, "T": true, "W": true, "Th": true, "F": true, "Sa": false, "Su": false},
-			IsEnabled:  false,
-		},
-		&Reminder{
-			Name:       "Water Break",
-			Type:       ReminderTypeCounter,
-			TimeValue:  "01:30",
-			ActiveDays: map[string]bool{"M": true, "T": true, "W": true, "Th": true, "F": true, "Sa": true, "Su": true},
-			IsEnabled:  true,
-		},
-	)
 	w.Window.SetIcon(icon)
 	w.setupLayout()
 	return w
+}
+
+// SetFromConfig replaces reminders with those from cfg and refreshes the layout.
+func (w *ReminderListWindow) SetFromConfig(cfg *config.Config) {
+	w.Reminders = remindersFromConfig(cfg)
+	w.setupLayout()
+}
+
+var typeToUI = map[string]ReminderType{
+	"alert":   ReminderTypeClock,
+	"counter": ReminderTypeCounter,
+}
+
+func remindersFromConfig(cfg *config.Config) []*Reminder {
+	if cfg == nil || len(cfg.Reminders) == 0 {
+		return nil
+	}
+	out := make([]*Reminder, 0, len(cfg.Reminders))
+	for i := range cfg.Reminders {
+		r := &cfg.Reminders[i]
+		uiType := typeToUI[r.Type]
+		if uiType == "" {
+			uiType = ReminderTypeCounter
+		}
+		timeVal := ""
+		if r.Alert != nil {
+			timeVal = r.Alert.Value
+		}
+		if r.Counter != nil {
+			timeVal = r.Counter.CurrentValue
+		}
+		out = append(out, &Reminder{
+			Name:       r.Name,
+			Type:       uiType,
+			TimeValue:  timeVal,
+			ActiveDays: daysActiveToMap(r.DaysActive),
+			IsEnabled:  r.Enabled,
+		})
+	}
+	return out
+}
+
+// daysActiveToMap converts bitmask (0-127) to map; bits 0..6 = M,T,W,Th,F,Sa,Su.
+func daysActiveToMap(daysActive int) map[string]bool {
+	daysOrder := []string{"M", "T", "W", "Th", "F", "Sa", "Su"}
+	m := make(map[string]bool, 7)
+	for i, day := range daysOrder {
+		m[day] = (daysActive & (1 << i)) != 0
+	}
+	return m
 }
 
 func (w *ReminderListWindow) setupLayout() {

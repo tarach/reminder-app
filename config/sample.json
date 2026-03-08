@@ -1,0 +1,116 @@
+{
+    "format": "24h",
+    "reminders": [
+        {
+            "name": "Morning Workout",
+            "enabled": true,
+            "type": "alert",
+            "daysActive": 21,
+            "alarm": {
+                "rules": [
+                    {
+                        "at": "7h"
+                    }
+                ],
+                "sound": {
+                    "default": true
+                }
+            },
+            "alert": {
+                "value": "07:00"
+            }
+        },
+        {
+            "name": "Study Session",
+            "enabled": false,
+            "type": "counter",
+            "daysActive": 31,
+            "alarm": {
+                "rules": [
+                    {
+                        "every": "1h"
+                    }
+                ],
+                "sound": {
+                    "file": "../assets/default-alarm.mp3"
+                }
+            },
+            "counter": {
+                "format": "duration",
+                "currentValue": "22:00",
+                "initialValue": "00:00",
+                "displayFormat": "hh:mm",
+                "rules": [
+                    {
+                        "every": "1m",
+                        "increase": "1m"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Water Break",
+            "enabled": true,
+            "type": "counter",
+            "daysActive": 127,
+            "alarm": {
+                "rules": [
+                    {
+                        "at": "1h30s"
+                    }
+                ],
+                "sound": {
+                    "default": true
+                }
+            },
+            "counter": {
+                "format": "duration",
+                "currentValue": "01:10",
+                "initialValue": "00:00",
+                "displayFormat": "mm:ss",
+                "rules": [
+                    {
+                        "every": "1s",
+                        "increase": "1s"
+                    },
+                    {
+                        "every": "1h30s",
+                        "setValue": "00:00" 
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Deep breaths",
+            "enabled": false,
+            "type": "counter",
+            "daysActive": 127,
+            "alarm": {
+                "rules": [
+                    {
+                        "every": "4"
+                    }
+                ],
+                "sound": {
+                    "default": true
+                }
+            },
+            "counter": {
+                "format": "number",
+                "currentValue": "2",
+                "initialValue": "0",
+                "displayFormat": "number",
+                "rules": [
+                    {
+                        "every": "1s",
+                        "increase": "1"
+                    },
+                    {
+                        "every": "14s",
+                        "setValue": "0"
+                    }
+                ]
+            }
+        }
+    ]
+}
