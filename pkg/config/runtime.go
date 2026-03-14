@@ -19,6 +19,7 @@ func validateRuntime(cfg *Config) []Warning {
 		if err != nil {
 			warnings = append(warnings, Warning{
 				ReminderIndex: i,
+				ReminderName:  r.Name,
 				Message:       "sound file not found or not readable: " + r.Alarm.Sound.File,
 				DisableSound:  true,
 			})
@@ -28,6 +29,7 @@ func validateRuntime(cfg *Config) []Warning {
 		if err != nil {
 			warnings = append(warnings, Warning{
 				ReminderIndex: i,
+				ReminderName:  r.Name,
 				Message:       "sound file not readable: " + r.Alarm.Sound.File,
 				DisableSound:  true,
 			})

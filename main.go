@@ -2,7 +2,7 @@ package main
 
 import (
 	_ "embed"
-	"reminder-app/pkg/config"
+	apppkg "reminder-app/pkg/app"
 	"reminder-app/pkg/ui"
 
 	"fyne.io/fyne/v2"
@@ -24,12 +24,9 @@ func main() {
 	a.Settings().SetTheme(&ui.AppTheme{})
 	icon := fyne.NewStaticResource("icon", IconPNG)
 
-	reminderListWindow := ui.NewReminderListWindow(a, icon)
-	reminderListWindow.Window.Show()
-	ui.StartConfigFlow(reminderListWindow.Window, SampleConfig, func(cfg *config.Config, _ bool) {
-		reminderListWindow.SetFromConfig(cfg)
-	}, a.Quit)
-	reminderListWindow.Window.ShowAndRun()
+	c := apppkg.NewController(a, icon, SampleConfig, a.Quit)
+	c.Start()
+	c.Run()
 	/*
 		windowConfig := ui.DefaultConfig()
 		mainWindow := ui.NewPlayerWindow(a, icon, windowConfig)

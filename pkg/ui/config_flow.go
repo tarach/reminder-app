@@ -161,6 +161,10 @@ func handleInvalidChoice(load bool, parent fyne.Window, _ string, sampleJSON []b
 
 func showRuntimeWarnings(parent fyne.Window, warnings []config.Warning) {
 	for _, w := range warnings {
-		dialog.ShowInformation("Configuration warning", w.Message+" Sound will be disabled for this reminder.", parent)
+		msg := w.Message
+		if w.DisableSound {
+			msg += " Sound will be disabled for \"" + w.ReminderName + "\"."
+		}
+		ShowInformation("Configuration warning", msg, parent)
 	}
 }
